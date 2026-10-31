@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "scope": "clean pinned loopback Docker profile",
+  "profile": "fpm83",
+  "stack": "Nginx + PHP-FPM 8.3.35 + WordPress 7.1.3",
+  "fingerprint": {
+    "php": "8.3.35",
+    "wordpress": "7.1.3",
+    "ini": "128M|1|/tmp",
+    "p_minus_b": "0x8662000",
+    "q_minus_b": "0x742d9d8"
+  },
+  "B": "0x0000776cf9c00000",
+  "r2a_p_offset": "0x8662000",
+  "r2b_p_offset": "0x8662000",
+  "r3_q_offset": "0x742d9d8",
+  "pair_sha256": "fe37410732f0b4a6a0174d8582af3bb1dc8104a21707fb5418df4952d4c42010",
+  "response_bytes": 405,
+  "response_sha256": "659e4f62802cb66fd44b14cd20e74f3a641aeded40a4200d8f3176370ac8be9f",
+  "flag": "hitcon{local_fpm83_dummy_do_not_submit}",
+  "authentic_hitcon_artifact": false
+}

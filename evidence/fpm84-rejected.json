@@ -1,0 +1,14 @@
+{
+  "profile": "fpm84",
+  "supported": false,
+  "stack": "Nginx + PHP-FPM 8.4.26 + WordPress 6.9.10",
+  "probe": "the reviewed FPM85 tail16 leak against a clean pinned local profile",
+  "response_bytes": 70625,
+  "response_sha256": "baa2a441e113cf726237526b389ca97f53f1610d77fe9526330f2a2550b17b30",
+  "reflected_value_bytes": 291,
+  "candidate_word_count": 14,
+  "candidate_words": "0x5a5a5a5a5a5a5a5a repeated 14 times",
+  "failure": "the pointer window remained filler bytes, so canonicality and alignment checks rejected the leak",
+  "consequence": "no heap base B, P/Q calibration, webroot write, or dummy-flag proof is claimed",
+  "scope": "local pinned profile only; no remote-host requests"
+}

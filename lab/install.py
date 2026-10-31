@@ -29,7 +29,10 @@ def wait_for_wordpress(origin):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=18233)
+    parser.add_argument("--title", default="HITCON-LAB-FPM85")
     args = parser.parse_args()
+    if not args.title or len(args.title) > 80:
+        parser.error("title must be 1-80 characters")
     if not 1 <= args.port <= 65535:
         parser.error("bad port")
 
@@ -40,7 +43,7 @@ def main():
     if not installed:
         password = secrets.token_urlsafe(24)
         fields = {
-            "weblog_title": "HITCON-LAB-FPM85",
+            "weblog_title": args.title,
             "user_name": "lab_admin",
             "admin_password": password,
             "admin_password2": password,

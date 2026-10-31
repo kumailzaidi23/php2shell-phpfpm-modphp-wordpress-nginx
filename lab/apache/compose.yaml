@@ -29,7 +29,9 @@ services:
       LAB_DB_NAME: ${DB_NAME:-wp_apache}
       LAB_DB_USER: ${DB_USER:-wp_lab}
       LAB_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
-      LAB_ORIGIN: http://127.0.0.1:${APACHE_PORT:-18234}
+      LAB_ORIGIN: http://127.0.0.1:${APACHE_PORT:-18322}
+    ports:
+      - "127.0.0.1:${APACHE_PORT:-18322}:80"
     volumes:
       - ./proofs:/out
 

