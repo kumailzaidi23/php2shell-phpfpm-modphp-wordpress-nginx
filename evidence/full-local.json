@@ -1,0 +1,40 @@
+{
+  "scope": "complete local three-profile recreation; not an authentic HITCON solve",
+  "success": true,
+  "score": "3/3 local dummy flags",
+  "authentic_hitcon_artifacts": false,
+  "profiles": [
+    {
+      "name": "fpm-a",
+      "stack": "Nginx + PHP-FPM 8.5.11 + WordPress 6.9.10",
+      "B": "0x00007011fe400000",
+      "r2a_p_offset": "0x8862000",
+      "r2b_p_offset": "0x8862000",
+      "r3_q_offset": "0x608f00",
+      "response_bytes": 438,
+      "response_sha256": "076fc764b8919b9f9acea5422186e6c89334bbf8ff3a4cb99b33c128e364ea1f",
+      "dummy_flag": "hitcon{local_fpm_instance_a_do_not_submit}"
+    },
+    {
+      "name": "fpm-b",
+      "stack": "Nginx + PHP-FPM 8.5.11 + WordPress 6.9.10",
+      "B": "0x00007e9146800000",
+      "r2a_p_offset": "0x8662000",
+      "r2b_p_offset": "0x8662000",
+      "r3_q_offset": "0x608f00",
+      "response_bytes": 438,
+      "response_sha256": "9f777ab69a13b02bc39702262fe4f3f8cb9910eff62341c3bf1ed96b4684cec3",
+      "dummy_flag": "hitcon{local_fpm_instance_b_do_not_submit}"
+    },
+    {
+      "name": "apache-wordpress",
+      "stack": "Apache prefork + mod_php 8.4.26 + WordPress 7.0.7",
+      "attempt": 1,
+      "libphp": "0x75ddd7c8e000",
+      "main": "0x75ddd6000000",
+      "zif_system": "0x75ddd80f3370",
+      "proof_sha256": "4c67125ffdff93dff83deb877de7e1ba4f9a2b26eab842c3ad1e5bdbb431b725",
+      "dummy_flag": "hitcon{local_apache_instance_do_not_submit}"
+    }
+  ]
+}

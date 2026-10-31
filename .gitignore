@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+lab/.env
+lab/install-*.html
+runs/
+lab/apache/proofs/
+.DS_Store
+.vscode/
+.idea/

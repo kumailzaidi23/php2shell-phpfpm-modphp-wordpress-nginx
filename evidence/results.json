@@ -1,0 +1,45 @@
+{
+  "scope": "representative local PHP 8.5.11 / WordPress 6.9.10 FPM clone",
+  "official_challenge_solve": false,
+  "real_flags": 0,
+  "common": {
+    "r2a_p_offset": "0x8862000",
+    "r2b_p_offset": "0x8862000",
+    "r3_q_offset": "0x608f00",
+    "scalar_sha256": "821b3b5f7338fd396d448e4b979660c4a8b2bf8d8a9ca49efaccfc79de9e8b75",
+    "pair_sha256": "670b851087d00c42f0fe14423b11a9249e1b5b70ed81754f3aa4412f739e7d41",
+    "dummy_marker": "hitcon{local_fpm85_dummy_do_not_submit}"
+  },
+  "runs": [
+    {
+      "name": "run25",
+      "B": "0x0000754b8c800000",
+      "response_bytes": 435,
+      "response_sha256": "69a37daf7fe55aae2e9f4a8f67125808b1d6bf4a0accd4096dcf7ae584e868b7"
+    },
+    {
+      "name": "run26",
+      "B": "0x0000745599a00000",
+      "response_bytes": 435,
+      "response_sha256": "b56951c46d1c0e17b6003251fc0907481a9ad049da8de02ea0322ea6ee9ab8d4"
+    },
+    {
+      "name": "run27-hardened-seed",
+      "B": "0x00007ea921800000",
+      "response_bytes": 435,
+      "response_sha256": "54b57fec653dea32e3ee190a4da58f25d59f4588d16920b210f15f9e11d41c4d"
+    },
+    {
+      "name": "fresh-repo-lab",
+      "B": "0x000078ef08200000",
+      "response_bytes": 435,
+      "response_sha256": "d1a1375f6d9187c16afb726f0d8d360e00cee36826e76b45ffc73382ed155a5b"
+    },
+    {
+      "name": "repo-smoke",
+      "B": "0x00007ab68ba00000",
+      "response_bytes": 435,
+      "response_sha256": "79871e1f641ae9c5d387230bf078ad30129a62b2b1cdac9e9c7b0ccab5d3c893"
+    }
+  ]
+}

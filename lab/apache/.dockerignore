@@ -1,0 +1,4 @@
+.env
+proofs/
+__pycache__/
+*.pyc

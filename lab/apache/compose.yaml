@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mariadb:11.8
+    container_name: php2shell-apache-db
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-wp_apache}
+      MARIADB_USER: ${DB_USER:-wp_lab}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - database:/var/lib/mysql
+
+  apache:
+    build:
+      context: .
+      args:
+        LOCAL_FLAG: ${LOCAL_FLAG:?set LOCAL_FLAG}
+    container_name: php2shell-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LAB_DB_HOST: db
+      LAB_DB_NAME: ${DB_NAME:-wp_apache}
+      LAB_DB_USER: ${DB_USER:-wp_lab}
+      LAB_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      LAB_ORIGIN: http://127.0.0.1:${APACHE_PORT:-18234}
+    volumes:
+      - ./proofs:/out
+
+volumes:
+  database:
