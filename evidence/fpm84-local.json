@@ -1,0 +1,46 @@
+{
+  "success": true,
+  "scope": "clean pinned loopback Docker profile",
+  "profile": "fpm84",
+  "stack": "Nginx + PHP-FPM 8.4.26 + WordPress 6.9.10",
+  "fingerprint": {
+    "php": "8.4.26",
+    "wordpress": "6.9.10",
+    "ini": "128M|1|/tmp",
+    "geometry_candidates": [
+      {
+        "big_value_from_b": "0x801a018",
+        "p_from_b": "0x8862000",
+        "q_from_b": "0x53a398"
+      },
+      {
+        "big_value_from_b": "0x7e1a018",
+        "p_from_b": "0x8862000",
+        "q_from_b": "0x33a398"
+      },
+      {
+        "big_value_from_b": "0x801a018",
+        "p_from_b": "0x8a62000",
+        "q_from_b": "0x53a398"
+      },
+      {
+        "big_value_from_b": "0x7e1a018",
+        "p_from_b": "0x8a62000",
+        "q_from_b": "0x33a398"
+      }
+    ]
+  },
+  "B": "0x000070489de00000",
+  "r2a_big_value_offset": "0x801a018",
+  "r2a_p_offset": "0x8862000",
+  "r2b_big_value_offset": "0x801a018",
+  "r2b_p_offset": "0x8862000",
+  "r3_big_value_offset": "0x801a018",
+  "r3_q_offset": "0x53a398",
+  "scalar_sha256": "821b3b5f7338fd396d448e4b979660c4a8b2bf8d8a9ca49efaccfc79de9e8b75",
+  "pair_sha256": "670b851087d00c42f0fe14423b11a9249e1b5b70ed81754f3aa4412f739e7d41",
+  "response_bytes": 435,
+  "response_sha256": "fd3a724cfac2c76f5b74d151de1a8f070d12f903eb28dbf6013c8fe9e1e2cc71",
+  "flag": "hitcon{local_fpm84_dummy_do_not_submit}",
+  "authentic_hitcon_artifact": false
+}

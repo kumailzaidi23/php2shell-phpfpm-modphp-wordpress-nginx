@@ -20,7 +20,7 @@ def wait_for_wordpress(origin):
     for _ in range(60):
         try:
             return fetch(origin + "/wp-admin/install.php")
-        except (HTTPError, URLError, TimeoutError) as error:
+        except (HTTPError, URLError, TimeoutError, ConnectionError) as error:
             last_error = error
             time.sleep(1)
     raise RuntimeError(f"WordPress did not start: {last_error}")
