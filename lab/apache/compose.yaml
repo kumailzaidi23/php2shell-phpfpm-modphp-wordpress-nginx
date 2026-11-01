@@ -1,7 +1,7 @@
 services:
   db:
-    image: mariadb:11.8
-    container_name: php2shell-apache-db
+    image: mariadb:11.8@sha256:c4124d1afa875e47f2892edf26b482fa54f796e2f342d3717a04ca091a22a9bd
+    container_name: php2shell-apache84-db
     environment:
       MARIADB_DATABASE: ${DB_NAME:-wp_apache}
       MARIADB_USER: ${DB_USER:-wp_lab}
@@ -20,7 +20,7 @@ services:
       context: .
       args:
         LOCAL_FLAG: ${LOCAL_FLAG:?set LOCAL_FLAG}
-    container_name: php2shell-apache
+    container_name: php2shell-apache84
     depends_on:
       db:
         condition: service_healthy
@@ -29,9 +29,9 @@ services:
       LAB_DB_NAME: ${DB_NAME:-wp_apache}
       LAB_DB_USER: ${DB_USER:-wp_lab}
       LAB_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
-      LAB_ORIGIN: http://127.0.0.1:${APACHE_PORT:-18322}
+      LAB_ORIGIN: http://127.0.0.1:${LAB_PORT:-18322}
     ports:
-      - "127.0.0.1:${APACHE_PORT:-18322}:80"
+      - "127.0.0.1:${LAB_PORT:-18322}:80"
     volumes:
       - ./proofs:/out
 

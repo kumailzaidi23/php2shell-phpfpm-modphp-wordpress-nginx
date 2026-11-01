@@ -1,0 +1,33 @@
+{
+  "scope": "clean pinned loopback Docker profile; not an authentic HITCON instance",
+  "success": true,
+  "profile": "fpm85",
+  "stack": "Nginx + PHP-FPM 8.5.11 + WordPress 6.9.10",
+  "fingerprint": {
+    "sapi": "fpm",
+    "php": "8.5.11",
+    "wordpress": "6.9.10",
+    "ini": "128M|1|/tmp",
+    "arch": "amd64",
+    "p_candidates": [
+      "0x8862000",
+      "0x8662000"
+    ],
+    "q_candidates": [
+      "0x608f00",
+      "0x7a27a50",
+      "0x7827a50"
+    ]
+  },
+  "attempt": 2,
+  "B": "0x00007b4207400000",
+  "r2a_p_offset": "0x8862000",
+  "r2b_p_offset": "0x8862000",
+  "r3_q_offset": "0x608f00",
+  "scalar_sha256": "821b3b5f7338fd396d448e4b979660c4a8b2bf8d8a9ca49efaccfc79de9e8b75",
+  "pair_sha256": "670b851087d00c42f0fe14423b11a9249e1b5b70ed81754f3aa4412f739e7d41",
+  "response_bytes": 438,
+  "response_sha256": "b0d36ce2a7ab3cc84bb5ee22d15ce682f27f813ce46038e068176c0e8f33a17a",
+  "dummy_flag": "hitcon{local_fpm85_instance_do_not_submit}",
+  "authentic_hitcon_artifacts": false
+}

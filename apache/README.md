@@ -1,6 +1,7 @@
-# Apache profile
+# Apache profiles
 
-This is the local Apache/WordPress side of the three-profile runner.
+This directory contains the common loopback-only runner and exact payload
+builders for three Apache/WordPress profiles: PHP 8.3.35, 8.4.26 and 8.5.11.
 
 The chain is:
 
@@ -12,8 +13,21 @@ B2 fake reference and fake HashTable
 system("cat /flag >/out/local_flag")
 ```
 
-The payload geometry and PHP 8.4.26 offsets come from the public `9bie/php2shell` research, commit `d6f888ebd3f0e188bb662e16f23747afdf35e42f`. I rewrote the small set of builders used here and kept fixed hashes for A1, B1 and A2.
+The PHP 8.4.26 geometry starts from public `9bie/php2shell` research, commit
+`d6f888ebd3f0e188bb662e16f23747afdf35e42f`. The PHP 8.3 and 8.5 builders use
+separately measured stale-ID, symbol and final-stage layouts from the pinned
+local WordPress clones. A1, B1 and A2 are rebuilt in memory and checked against
+fixed byte counts and SHA-256 hashes before any request is sent.
 
-`solve.py` is loopback-only and calibrated for the Docker profile in `lab/apache`. It pins 149 of the stock 150 prefork workers so all four exploit requests reach the same remaining child. The exploited child normally crashes after B2, but the flag copy completes first and Apache replaces the worker.
+`apache84` pins 149 of the stock 150 prefork workers. `apache83` and `apache85`
+use single-worker labs. The exploited child normally crashes after B2, but the
+flag copy completes first and Apache replaces it.
 
-This is a local dummy-flag reproduction, not proof against an authentic HITCON instance.
+```bash
+python3 apache/solve.py --profile apache83
+python3 apache/solve.py --profile apache84
+python3 apache/solve.py --profile apache85
+```
+
+These are local dummy-flag reproductions, not proof against an authentic
+HITCON instance or an arbitrary build with the same PHP version string.

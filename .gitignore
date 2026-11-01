@@ -5,6 +5,7 @@ lab/.env
 lab/install-*.html
 runs/
 lab/apache/proofs/
+profiles/apache*/proofs/
 .DS_Store
 .vscode/
 .idea/

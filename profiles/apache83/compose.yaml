@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mariadb:11.8@sha256:c4124d1afa875e47f2892edf26b482fa54f796e2f342d3717a04ca091a22a9bd
+    container_name: php2shell-apache83-db
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-wp_apache83}
+      MARIADB_USER: ${DB_USER:-wp_lab}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - database:/var/lib/mysql
+
+  apache:
+    build:
+      context: ../..
+      dockerfile: profiles/apache83/Dockerfile
+      args:
+        LOCAL_FLAG: ${LOCAL_FLAG:?set LOCAL_FLAG}
+    container_name: php2shell-apache83
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LAB_DB_HOST: db
+      LAB_DB_NAME: ${DB_NAME:-wp_apache83}
+      LAB_DB_USER: ${DB_USER:-wp_lab}
+      LAB_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      LAB_ORIGIN: http://127.0.0.1:${LAB_PORT:-18323}
+    ports:
+      - "127.0.0.1:${LAB_PORT:-18323}:80"
+    volumes:
+      - ./proofs:/out
+
+volumes:
+  database:

@@ -1,0 +1,40 @@
+{
+  "scope": "exact local Apache 8.4.26 / WordPress 7.0.7 profile; not an authentic HITCON instance",
+  "success": true,
+  "profile": "apache84",
+  "fingerprint": "apache2handler|8.4.26|7.0.7|128M|1||amd64",
+  "workers": 150,
+  "attempt": 1,
+  "stages": {
+    "a1": {
+      "status": 500,
+      "request_bytes": 1060211,
+      "request_sha256": "8e8fc166e6b326d20bb7611d8ef3cee3bd5da46447985312c1492ab0a44d1eb6"
+    },
+    "b1": {
+      "status": 200,
+      "request_bytes": 33128677,
+      "request_sha256": "b6c547e0e9a2bb26607df1521de96f4d5c9adf4621c28b7ab491587b21ae40f2",
+      "decoded_cookie_bytes": 819200,
+      "zval_ptr_dtor_count": 1095,
+      "libphp": "0x74786140d000",
+      "main": "0x74785f800000",
+      "main_pointer_count": 87
+    },
+    "a2": {
+      "status": 500,
+      "request_bytes": 279369,
+      "request_sha256": "7af66c8f35c5fa6b47a539da6dca361d19543d9f62d61e4af891c2802bd5e236"
+    },
+    "b2": {
+      "request_bytes": 451384,
+      "request_sha256": "9dc3babefa231b6eba0d9c2d28b4a4bc2290456518b14fec2964d3f1b8f3fe97",
+      "fake_hash_table": "0x74785f8f8398",
+      "zif_system": "0x747861872370",
+      "zero_tail": true
+    }
+  },
+  "dummy_flag": "hitcon{local_apache_instance_do_not_submit}",
+  "proof_sha256": "4c67125ffdff93dff83deb877de7e1ba4f9a2b26eab842c3ad1e5bdbb431b725",
+  "authentic_hitcon_artifacts": false
+}
